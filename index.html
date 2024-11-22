@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SkyForge Hosting Status</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: #1e1e2e;
+            color: #c9d1d9;
             margin: 0;
             padding: 20px;
         }
@@ -18,33 +18,107 @@
             margin-bottom: 20px;
         }
 
+        h1 {
+            color: #ffffff;
+            font-size: 24px;
+        }
+
         #status {
-            background: white;
+            background: #282a36;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .operational-status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #4caf50; /* Green color for operational status */
         }
 
         ul {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
 
         li {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #3b3f51;
         }
 
         li:last-child {
             border-bottom: none;
         }
 
-        .online {
-            color: green;
+        .node-info {
+            display: flex;
+            flex-direction: column;
         }
 
-        .offline {
-            color: red;
+        .node-info strong {
+            font-size: 18px;
+            color: #ffffff;
+        }
+
+        .node-details {
+            font-size: 14px;
+            color: #a8b1c1;
+            margin-top: 5px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-circle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .online .status-circle {
+            background-color: #4caf50;
+        }
+
+        .offline .status-circle {
+            background-color: #f44336;
+        }
+
+        .resource-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            background-color: #444;
+            overflow: hidden;
+        }
+
+        .resource-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .time-info {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 600px) {
+            li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .status-bar {
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
@@ -52,46 +126,90 @@
     <header>
         <h1>SkyForge Hosting Node Status</h1>
     </header>
+    
+    <main>
+        <div class="operational-status">
+            <span>✅ All Systems Operational</span>
+        </div>
+    </main>
+
     <main>
         <section id="status">
-            <h2>Node Status</h2>
-            <ul id="node-list"></ul>
+            <h2 style="color: #ffffff; margin-bottom: 15px;">Node Status</h2>
+            <ul id="node-list">
+                <!-- Nodes will be dynamically added here -->
+            </ul>
         </section>
     </main>
 
-    <script>
-        const urlToPing = '45.11.229.97';
-
-        async function checkServerStatus() {
-            try {
-                const response = await fetch(urlToPing, { method: 'GET', mode: 'no-cors' });
-                // Check if the response is ok (status in the range 200-299)
-                const nodeList = document.getElementById('node-list');
-                nodeList.innerHTML = ''; // Clear existing content
-
-                const listItem = document.createElement('li');
-                if (response.ok) {
-                    listItem.textContent = `Status: Online`;
-                    listItem.classList.add('online');
-                } else {
-                    listItem.textContent = `Status: Offline`;
-                    listItem.classList.add('offline');
-                }
-                nodeList.appendChild(listItem);
-            } catch (error) {
-                console.error('Error checking server status:', error);
-                const nodeList = document.getElementById('node-list');
-                nodeList.innerHTML = ''; // Clear existing content
-
-                const listItem = document.createElement('li');
-                listItem.textContent = `Status: Offline (Error occurred)`;
-                listItem.classList.add('offline');
-                nodeList.appendChild(listItem);
+    <script type="module">
+        // Node data
+        const nodes = [
+            {
+                name: "Premium Panel",
+                status: "Online",
+                location: "Infrastructure",
+                lastUpdated: "2h ago",
+                checked: "2h ago",
+                memory: { total: 40, allocated: 0.75 }, // in GB
+                diskSpace: { total: 300, allocated: 1.8 } // in GB
+            },
+            {
+                name: "DE1 - Frankfurt",
+                status: "Online",
+                location: "Paid/Free",
+                lastUpdated: "2h ago",
+                checked: "2h ago",
+                memory: { total: 16, allocated: 0.75 }, // in GB
+                diskSpace: { total: 100, allocated: 1.8 } // in GB
+            },
+            {
+                name: "DE2 - Frankfurt",
+                status: "Offline",
+                location: "Paid/Free",
+                lastUpdated: "2h ago",
+                checked: "1m ago",
+                memory: { total: 24, allocated: 0 }, // in GB
+                diskSpace: { total: 200, allocated: 0 } // in GB
             }
+        ];
+
+        function displayNodeStatus() {
+            const nodeList = document.getElementById('node-list');
+            nodeList.innerHTML = ''; // Clear existing content
+
+            nodes.forEach(node => {
+                const listItem = document.createElement('li');
+                listItem.classList.add(node.status === 'Online' ? 'online' : 'offline');
+
+                const memoryUsage = (node.memory.allocated / node.memory.total) * 100;
+                const diskUsage = (node.diskSpace.allocated / node.diskSpace.total) * 100;
+
+                listItem.innerHTML = `
+                    <div class="node-info">
+                        <strong>${node.name}</strong>
+                        <span class="node-details">${node.location}</span>
+                        <div class="resource-bar">
+                            <div class="resource-fill" style="width: ${memoryUsage}%; background-color: ${memoryUsage < 100 ? '#4caf50' : '#f44336'};"></div>
+                        </div>
+                        <span>Memory: ${node.memory.allocated} GB / ${node.memory.total} GB</span>
+                        <div class="resource-bar">
+                            <div class="resource-fill" style="width: ${diskUsage}%; background-color: ${diskUsage < 100 ? '#4caf50' : '#f44336'};"></div>
+                        </div>
+                        <span>Disk Space: ${node.diskSpace.allocated} GB / ${node.diskSpace.total} GB</span>
+                    </div>
+                    <div class="status-bar">
+                        <div class="status-circle"></div>
+                        <div class="time-info">Last updated: ${node.lastUpdated}<br>Checked: ${node.checked}</div>
+                    </div>
+                `;
+
+                nodeList.appendChild(listItem);
+            });
         }
 
-        // Call the function to check server status when the page loads
-        window.onload = checkServerStatus;
+        // Initialize the node display
+        window.onload = displayNodeStatus;
     </script>
 </body>
 </html>
